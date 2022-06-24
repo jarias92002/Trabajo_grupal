@@ -1,0 +1,529 @@
+---
+title: "Trabajo grupal"
+output: html_document
+---
+
+```{r}
+library(rio)
+data <- import("https://github.com/jarias92002/Trabajo_grupal/blob/main/Data_World_Bank_2016.xlsx?raw=true")
+```
+
+### **Nombres y apellidos del estudiante: Juan Sebastian Arias Palomino** <br>
+
+### **Código del estudiante: 20190983** <br>
+
+============================================================
+
+```{r}
+names(data)
+str(data)
+```
+
+### REGRESIÓN 1:
+
++ Analizar si la variable independiente Gasto público en educación total (GEE), afecta a la variable dependiente Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales (BSS):
+
++ Verificamos si hay N/AS y eliminamos:
+
+```{r}
+sum(is.na(data$BSS))
+sum(is.na(data$GDE))
+```
+
+```{r}
+data1 = data[complete.cases(data$BSS),]
+data1 = data[complete.cases(data$GDE),]
+```
+
++ Creamos un gráfico de dispersión:
+
+```{r}
+plot(data1$BSS,data1$GDE)
+```
+
++ Prueba de normalidad y correlación:
+
+```{r}
+library(nortest)
+lillie.test(data1$BSS)
+lillie.test(data1$GDE)
+```
+
+Ambos p-values son menores a 0.05 por lo que no presentan normalidad y podemos continuar haciendo las pruebas de correlación con Spearman.
+
++ Delimitamos cuáles serán las hipótesis para las pruebas de correlación:
+
+H0 = No existe correlación entre Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales y Gasto público en educación 
+H1 = Sí existe correlación entre Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales y Gasto público en educación
+
+```{r}
+cor.test(data1$BSS, data1$GDE, method = c("spearman"))
+```
+
+El p-value es menor a 0.05 por lo que se rechaza la Hipótesis nula y se demuestra que hay correlación entre las dos variables, por lo que es necesario crear el modelo de regresión lineal.
+
++ Modelo de regresión lineal:
+
+Las hipótesis para la prueba F son las siguientes:
+
+H0:El modelo de regresión no es válido
+H1:El modelo de regresión es válido
+
+```{r}
+modelo1 <- lm(GDE~BSS, data=data1)
+anova(modelo1)
+```
+
+```{r}
+summary(modelo1)
+```
+
+El p-value es menor a 0.05, por lo que nuevamente se rechaza la hipótesis nula y se demuestra que hay relación entre las variables, es decir, que el GDE explica el BSS.
+
+Como el coeficiente R-cuadrado ajustado es 0.1069, significa que este modelo de regresión explica en un 10.69%.
+
+
+### REGRESIÓN 2:
+
++ Analizar si la variable independiente Desempleo (UET), afecta a la variable Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales (BSS):
+
++ Verificamos si hay N/AS y eliminamos:
+
+```{r}
+sum(is.na(data$BSS))
+sum(is.na(data$UET))
+```
+
+```{r}
+data2 = data[complete.cases(data$BSS),]
+data2 = data[complete.cases(data$UET),]
+```
+
++ Creamos un gráfico de dispersión:
+
+```{r}
+plot(data2$BSS,data2$UET)
+```
+
++ Prueba de normalidad y correlación:
+
+```{r}
+library(nortest)
+lillie.test(data2$BSS)
+lillie.test(data2$UET)
+```
+
+Ambos p-values son menores a 0.05 por lo que no presentan normalidad y podemos continuar haciendo las pruebas de correlación con Spearman.
+
++ Delimitamos cuáles serán las hipótesis para las pruebas de correlación:
+
+H0 = No existe correlación entre Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales y Desempleo
+H1 = Sí existe correlación entre Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales y Desempleo
+
+```{r}
+cor.test(data2$BSS, data2$UET, method = c("spearman"))
+```
+
+El p-value es menor a 0.05 por lo que se rechaza la Hipótesis nula y se demuestra que hay correlación entre las dos variables, por lo que es necesario crear el modelo de regresión lineal.
+
++ Modelo de regresión lineal:
+
+Las hipótesis para la prueba F son las siguientes:
+
+H0:El modelo de regresión no es válido
+H1:El modelo de regresión es válido
+
+```{r}
+modelo2 <- lm(UET~BSS, data=data2)
+anova(modelo2)
+```
+
+```{r}
+summary(modelo2)
+```
+
+El p-value es mayor a 0.05, por lo que se acepta la hipótesis nula y se demuestra que no hay relación entre las variables, es decir, que el UET no explica el BSS.
+
+### ECUACIÓN:
+Y= 3.4034+0.0183*X
+
++ Gráfico de la ecuación:
+
+```{r}
+library(ggplot2)
+ggplot(data1, aes(x=GDE, y=BSS)) +
+  geom_point(colour="red") +  xlab("Gasto público en educación") +  ylab("Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales") +
+  ggtitle("Modelo 2") +
+  theme_light()+ geom_smooth(method="lm", se = F)
+```
+
+### REGRESIÓN LINEAL MULTIVARIADA:
+
++ Ahora vamos a hacer una regresión lineal multivariada con las mismas variables, manteniendo Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales (BSS) como variable dependiente y Gasto público en educación (GDE) y Desempleo (UET) como variables independientes:
+
+```{r}
+library(stargazer)
+modelo3=formula(data$BSS~data$GDE+data$UET)
+regresión1=lm(modelo3,data=data)
+stargazer(regresión1,type = "text")
+```
+
+```{r}
+summary(regresión1)
+```
+
+Este modelo si aporta pues si p-value es menor a 0.05, explica un 12.76%. Sin embargo, la única variable que explica es Gasto público en educación (GDE), pues su p-value es menor a 0.05.
+
++ Ecuación de la regresión:
+
+Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales = 31.2100 + 7.7252 * GDE
+
+### DIAGNÓSTICOS DE REGRESIÓN:
+
++ Linealidad:
+
+```{r}
+plot(regresión1, 1)
+```
+
+El análisis de linealidad no sale muy bien pues la linea roja no está cerca de la linea horizontal
+
++ Homocedasticidad:
+
+```{r}
+plot(regresión1, 3)
+```
+
+```{r}
+library(lmtest)
+bptest(regresión1)
+```
+
+La probabilidad de homocedasticidad es alta pues tiene un p-valor mayor a 0.05, por lo que se acepta que este modelo tiene homocedasticidad.
+
++ Normalidad de residuos:
+
+```{r}
+plot(regresión1, 2)
+```
+
+```{r}
+shapiro.test(regresión1$residuals)
+```
+
+En este caso, la prueba de normalidad de residuos muestra un p-valor menor a 0.05, lo cual no es positivo porque muestra que los residuos no se distribuyen de manera normal, esto se ve expresado en el gráfico porque los valores no están del todo cerca de la línea diagonal.
+
++ No multicolinealidad:
+
+```{r}
+library(DescTools)
+VIF(regresión1)
+```
+
+Como ninguna variable sale mayor a 5, ninguna es candidata a ser retirada y muestra que estas no están muy correlacionadas entre sí, es decir, muestra que estas no tratan de explicar el mismo fenómeno.
+
++ Valores influyentes:
+
+```{r}
+plot(regresión1, 5)
+```
+
+El gráfico muestra que efectivamente hay valores atípicos que influyen negativamente en la regresión.
+
+### ANÁLISIS DE CONGLOMERADOS:
+
+```{r}
+list(names(data))
+```
+
+Nos quedamos solo con los datos que necesitamos:
+
+```{r}
+data3 = data[,c(1,7,6,5)]
+```
+
+```{r}
+library(readr)
+str(data3)
+summary(data3)
+```
+
+Verificando distribución:
+
+```{r}
+boxplot(data3[,-1])
+```
+
+```{r}
+library(BBmisc)
+boxplot(normalize(data3[,-1],method='range',range=c(0,1)))
+```
+
+```{r}
+data3[,-1]=normalize(data3[,-1],method='standardize')
+data3=data3[complete.cases(data3),]
+summary(data3)
+```
+
++ Correlaciones:
+
+```{r}
+cor(data3[,-1])
+```
+
++ Cambio de monotonía:
+
+```{r}
+data3$GDE=-1*data3$GDE
+cor(data3[,-1])
+```
+
++ Preparamos la data para la clusterización:
+
+```{r}
+dataClus=data3[,-1]
+row.names(dataClus)=data3$`Country Name`
+```
+
+### CLUSTERIZACIÓN:
+
++ Calcular distancia entre los casos:
+
+```{r}
+library(cluster)
+g.dist = daisy(dataClus, metric="gower")
+```
+
++ Pondremos cuatro clusters:
+
+```{r}
+set.seed(123)
+pam.resultado=pam(g.dist,4,cluster.only = F)
+
+dataClus$pam=pam.resultado$cluster
+```
+
++ Exploración de resultados:
+
+```{r}  
+aggregate(.~ pam, data=dataClus,mean)
+```
+
++ Recodificamos las etiquetas del cluster:
+
+```{r}
+original=aggregate(.~ pam, data=dataClus,mean)
+original[order(original$BSS),]
+```
+
+Se va a recodificar los clusters en función del BSS (Personas que utilizan al menos los servicios básicos de saneamiento en zonas rurales), se tomo está decisión porque es la variable dependiente y la que más nos interesa analizar
+
+```{r}
+dataClus$pam=dplyr::recode(dataClus$pam, `3` = 1, `1`=2,`4`=3,`2`=4)
+```
+
+### ESTRATEGIA JERÁRQUICA:
+
++ Estrategia jerárquica aglomerativa:
+
+El linkage que se usará es Ward
+
+```{r}
+set.seed(123)
+library(factoextra)
+```
+
+```{r}
+res.agnes<- hcut(g.dist, k = 4,hc_func='agnes',hc_method = "ward.D")
+dataClus$agnes=res.agnes$cluster
+```
+
+```{r}
+aggregate(.~ agnes, data=dataClus,mean)
+```
+
++ Recodificamos el cluster para que este ordenado:
+
+```{r}
+original=aggregate(.~ agnes, data=dataClus,mean)
+original[order(original$BSS),]
+```
+
+```{r}
+dataClus$agnes=dplyr::recode(dataClus$agnes, `1` = 1, `3`=2,`2`=3,`4`=4)
+```
+
++ Visualización:
+
+```{r}
+fviz_dend(res.agnes, cex = 0.7, horiz = T)
+```
+
++ Estrategia jerárquica divisiva:
+
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+```
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2)
+```
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2)) +  coord_fixed()
+base + geom_point(size=2, aes(color=as.factor(pam)))  + labs(title = "PAM") 
+```
+
++ Para PAM
+
+```{r}
+library(factoextra)
+fviz_nbclust(dataClus, pam,diss=g.dist,method = "gap_stat",k.max = 10,verbose = F)
+```
+
++ Para jerarquico
+
+```{r}
+fviz_nbclust(dataClus, hcut,diss=g.dist,method = "gap_stat",k.max = 10,verbose = F,hc_func = "agnes")
+```
+
+```{r}
+fviz_nbclust(dataClus, hcut,diss=g.dist,method = "gap_stat",k.max = 10,verbose = F,hc_func = "diana")
+```
+
+```{r}
+###pam
+set.seed(123)
+grupos=4
+res.pam=pam(g.dist,k = grupos,cluster.only = F)
+dataClus$pam=res.pam$cluster
+
+###agnes
+res.agnes<- hcut(g.dist, k =grupos,hc_func='agnes',hc_method = "ward.D")
+dataClus$agnes=res.agnes$cluster
+
+### diana
+res.diana <- hcut(g.dist, k = grupos,hc_func='diana')
+dataClus$diana=res.diana$cluster
+```
+
+```{r}
+fviz_silhouette(res.pam)
+fviz_silhouette(res.agnes)
+fviz_silhouette(res.diana)
+```
+
++ Grafico
+
+```{r}
+original=aggregate(.~ diana, data=dataClus,mean)
+original[order(original$BSS),]
+```
+
+```{r}
+dataClus$diana=dplyr::recode(dataClus$diana, `3` = 1, `4`=2,`2`=3,`1`=4)
+```
+
++ Proyectando los casos en dos dimensiones:
+
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2, aes(color=as.factor(diana)))  + labs(title = "DIANA") 
+```
+
+### PROCESO DEL ANÁLISIS FACTORIAL EXPLORATORIO (EFA)
+
+1. Calculemos matriz de correlación:
+
+```{r}
+dontselect=c("Country Name","Country Code")
+select=setdiff(names(data),dontselect) 
+theData=data[,select]
+
+library(polycor)
+corMatrix=polycor::hetcor(theData)$correlations
+```
+
+2. Explorar correlaciones:
+
++ Sin evaluar significancia:
+
+```{r}
+library(ggcorrplot)
+
+ggcorrplot(corMatrix)
+```
+
+3. Verificar si datos permiten factorizar:
+
+```{r}
+library(psych)
+psych::KMO(corMatrix)
+```
+
+4. Verificar si la matriz de correlaciones es adecuada
++ Aqui hay dos pruebas:
+
++ Hnula: La matriz de correlacion es una matriz identidad
+
+```{r}
+cortest.bartlett(corMatrix,n=nrow(theData))$p.value>0.05
+```
+
++ Hnula: La matriz de correlacion es una matriz singular.
+
+```{r}
+library(matrixcalc)
+
+is.singular.matrix(corMatrix)
+```
+
+5. Determinar en cuantos factores o variables latentes podríamos redimensionar la data:
+
+```{r}
+fa.parallel(theData,fm = 'ML', fa = 'fa',correct = T)
+```
+
+6. Redimensionar a numero menor de factores
+
++ Resultado inicial:
+
+```{r}
+library(GPArotation)
+resfa <- fa(theData,
+            nfactors = 1,
+            cor = 'mixed',
+            rotate = "varimax",
+            fm="minres")
+print(resfa$loadings)
+```
+
++ Resultado mejorado:
+
+```{r}
+print(resfa$loadings,cutoff = 0.5)
+```
+
++ Resultado visual:
+
+```{r}
+fa.diagram(resfa)
+```
+
+7. Evaluando Resultado obtenido:
++ ¿Qué variables aportaron mas a los factores?
+
+```{r}
+sort(resfa$communality)
+```
+
+```{r}
+sort(resfa$complexity)
+```
+
